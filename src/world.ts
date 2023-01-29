@@ -201,7 +201,9 @@ class World extends Group {
         affected.set(key, { x: cx, y: cy, z: cz });
       }
   
-      actions.push({ x, y, z, undo: current, redo: updated });
+      if (history.enabled && !isFromHistory) {
+        actions.push({ x, y, z, undo: current, redo: updated });
+      }
       return actions;
     }, []);
 

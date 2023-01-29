@@ -35,7 +35,7 @@ export default {
           name: 'sculpty',
           author: 'Daniel Esteban Nombela',
           license: 'MIT',
-          version: '0.0.2',
+          version: '0.0.3',
           module: './sculpty.js',
           types: './types',
           homepage: 'https://sculpty.gatunes.com',
