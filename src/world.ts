@@ -128,10 +128,11 @@ class World extends Group {
         }
       }
     }
-    const version = ++chunk.version;
+    const version = ++chunk.request;
     mesher.run(chunks).then((geometry) => {
-      if (chunk?.version === version) {
+      if (chunk && chunk.version < version) {
         chunk.update(geometry);
+        chunk.version = version;
         this.dispatchEvent({ type: 'change' });
       }
     });

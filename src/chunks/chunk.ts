@@ -6,6 +6,7 @@ import VoxelChunk from './voxels';
 class Chunk extends Group {
   private readonly triangles: TriangleChunk;
   private readonly voxels: VoxelChunk;
+  public request: number = 0;
   public version: number = 0;
 
   constructor({
