@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "sculpty": ["../dist"],
+    },
+    "declaration": false,
+    "declarationDir": null,
+    "sourceMap": true
+  },
+  "include": ["."]
+}

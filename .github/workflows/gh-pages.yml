@@ -1,0 +1,25 @@
+name: gh-pages
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: PNPM
+        run: curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm@7
+      - name: Dependencies
+        run: pnpm install
+      - name: Module
+        run: pnpm build
+      - name: Build
+        run: pnpm build:example
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: 'example/dist'
