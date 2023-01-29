@@ -59,7 +59,7 @@ viewport.appendChild(renderer.domElement);
 
 const materials = Materials();
 const storage = new Storage({ chunkSize: 32 });
-const world = new World({ materials, storage });
+const world = new World({ history: true, materials, storage });
 world.addEventListener('change', () => {
   needsUpdate = true;
 });

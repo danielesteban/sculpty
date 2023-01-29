@@ -32,8 +32,8 @@ class World extends Group {
   private readonly storage: Storage;
 
   constructor({
-    history = true,
-    materials,
+    history = false,
+    materials = {},
     storage = new MemoryStorage(),
   }: {
     history?: boolean;
@@ -44,8 +44,8 @@ class World extends Group {
     this.chunks = new Map();
     this.queue = new Map();
     this.materials = {
-      triangles: materials?.triangles || new MeshBasicMaterial({ vertexColors: true }),
-      voxels: materials?.voxels || new MeshBasicMaterial({ visible: false }),
+      triangles: materials.triangles || new MeshBasicMaterial({ vertexColors: true }),
+      voxels: materials.voxels || new MeshBasicMaterial({ visible: false }),
     };
     const { chunkSize } = storage;
     this.mesher = new Worker({
