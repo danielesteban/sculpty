@@ -34,3 +34,8 @@ renderer.setAnimationLoop(() => {
   renderer.render(scene, camera);
 });
 ```
+
+### Examples
+
+ * Basic: [sculpty.glitch.me](https://sculpty.glitch.me) ([source](https://glitch.com/edit/#!/sculpty))
+ * Editor: [sculpty.gatunes.com](https://sculpty.gatunes.com) ([source](example))
