@@ -15,6 +15,7 @@ export default () => {
   const voxels = new MeshStandardMaterial({
     envMapIntensity: 0.5,
     vertexColors: true,
+    visible: false,
   });
   voxels.defines = {
     USE_INSTANCED_POSITION: 1,

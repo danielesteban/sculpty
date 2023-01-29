@@ -68,24 +68,12 @@ world.addEventListener('change', () => {
 });
 scene.add(world);
 
-const chunks: { x: number; y: number; z: number; d: number; }[] = [];
-{
-  const maxY = Math.min(
-    1 + storage.listStored().reduce((max, { y }) => Math.max(max, y), 0),
-    3
-  );
-  for (let z = -3; z <= 3; z++) {
-    for (let y = 0; y <= maxY; y++) {
-      for (let x = -3; x <= 3; x++) {
-        chunks.push({ x, y, z, d: Math.sqrt(x * x + y * y + z * z)});
-      }
-    }
-  }
-}
-chunks.sort(({ d: a }, { d: b }) => a - b);
-chunks.forEach(({ x, y, z }) => (
-  world.updateChunk(x, y, z)
-));
+const color = new Color();
+const size = new Size();
+const orientation = new Orientation();
+new Exporter(world);
+new Snapshot(postprocessing, renderer, camera, scene);
+ui.style.display = '';
 
 const controls = new OrbitControls(camera, viewport);
 controls.addEventListener('change', () => {
@@ -97,48 +85,48 @@ controls.dampingFactor = 0.1;
 controls.maxDistance = 96;
 controls.minDistance = 4;
 controls.mouseButtons.MIDDLE = undefined;
-
 controls.target.set(0, 8, 0);
 camera.position.set(0, 16, 32);
 const walk = new Walk(camera, controls, world);
 
-const color = new Color();
-const size = new Size();
-const orientation = new Orientation();
-const drawing = new Drawing(camera, color, orientation, size, world);
 const input = new Input(viewport);
-input.addEventListener('dragstart', (e) => {
+const drawing = new Drawing(camera, color, orientation, size, world);
+input.addEventListener('dragstart', (e: any) => {
   if (!controls.enablePan && !walk.isEnabled()) {
     drawing.start(e);
   }
 });
-input.addEventListener('dragmove', (e) => drawing.move(e));
+input.addEventListener('dragmove', (e: any) => drawing.move(e));
 input.addEventListener('dragend', () => drawing.end());
-
-materials.voxels.visible = false;
 document.addEventListener('keydown', (e) => {
-  const { ctrlKey, key, repeat, shiftKey } = e;
-  if (!repeat && key.toLocaleLowerCase() === 'escape') {
+  const { ctrlKey, code, repeat, shiftKey } = e;
+  if (!repeat && code === 'Escape') {
     ui.style.display = walk.toggle() ? 'none' : '';
   }
-  if (key.toLocaleLowerCase() === 'backspace' && ctrlKey) {
-    e.preventDefault();
-    localStorage.clear();
-    location.reload();
-  }
-  if (!repeat && key.toLocaleLowerCase() === 'tab') {
+  if (!repeat && code === 'Tab') {
     e.preventDefault();
     materials.triangles.visible = !materials.triangles.visible;
     materials.voxels.visible = !materials.triangles.visible;
     needsUpdate = true;
   }
+  if (!repeat && ctrlKey && code === 'Backspace') {
+    e.preventDefault();
+    localStorage.clear();
+    location.reload();
+  }
   if (walk.isEnabled()) {
     return;
   }
-  if (!repeat && key === ' ') {
+  if (!repeat && code === 'Space') {
     controls.enablePan = controls.enableRotate = true;
   }
-  if (ctrlKey && key.toLocaleLowerCase() === 'z') {
+  if (!repeat && ['Digit1', 'Digit2', 'Digit3'].includes(code)) {
+    size.setValue(['Digit1', 'Digit2', 'Digit3'].indexOf(code));
+  }
+  if (!repeat && code === 'KeyE') {
+    orientation.toggleMode();
+  }
+  if (ctrlKey && code === 'KeyZ') {
     e.preventDefault();
     if (shiftKey) {
       world.redo();
@@ -146,18 +134,12 @@ document.addEventListener('keydown', (e) => {
       world.undo();
     }
   }
-  if (!repeat && ['1', '2', '3'].includes(key)) {
-    size.setValue(parseInt(key, 10) - 1);
-  }
-  if (!repeat && key.toLocaleLowerCase() === 'e') {
-    orientation.toggleMode();
-  }
 });
-document.addEventListener('keyup', ({ key }) => {
+document.addEventListener('keyup', ({ code }) => {
   if (walk.isEnabled()) {
     return;
   }
-  if (key === ' ') {
+  if (code === 'Space') {
     controls.enablePan = controls.enableRotate = false;
   }
 });
@@ -179,7 +161,21 @@ renderer.setAnimationLoop(() => {
   }
 });
 
-new Exporter(world);
-new Snapshot(postprocessing, renderer, camera, scene);
-
-if (ui) ui.style.display = '';
+{
+  const chunks: { x: number; y: number; z: number; d: number; }[] = [];
+  const maxY = Math.min(
+    1 + storage.listStored().reduce((max, { y }) => Math.max(max, y), 0),
+    3
+  );
+  for (let z = -3; z <= 3; z++) {
+    for (let y = 0; y <= maxY; y++) {
+      for (let x = -3; x <= 3; x++) {
+        chunks.push({ x, y, z, d: Math.sqrt(x * x + y * y + z * z)});
+      }
+    }
+  }
+  chunks.sort(({ d: a }, { d: b }) => a - b);
+  chunks.forEach(({ x, y, z }) => (
+    world.updateChunk(x, y, z)
+  ));
+}

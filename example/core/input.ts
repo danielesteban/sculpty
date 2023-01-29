@@ -1,11 +1,13 @@
 import { EventDispatcher, Vector2 } from 'three';
 
+export type Pointer = {
+  id: number;
+  button: number;
+  position: Vector2;
+};
+
 class Input extends EventDispatcher {
-  private readonly pointer: {
-    id: number;
-    button: number;
-    position: Vector2;
-  };
+  private readonly pointer: Pointer;
 
   constructor(target: HTMLElement) {
     super();
