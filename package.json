@@ -10,7 +10,8 @@
   "dependencies": {
     "fastnoise-lite": "^0.0.1",
     "fflate": "^0.7.4",
-    "three": "^0.149.0"
+    "three": "^0.149.0",
+    "three-mesh-bvh": "^0.5.22"
   },
   "devDependencies": {
     "@rollup/plugin-alias": "^4.0.3",

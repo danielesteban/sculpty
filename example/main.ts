@@ -1,6 +1,7 @@
 import './main.css';
 import { World } from 'sculpty';
 import {
+  Clock,
   Mesh,
   PMREMGenerator,
   PerspectiveCamera,
@@ -17,6 +18,7 @@ import Materials from './core/materials';
 import PatchShaders from './core/patches';
 import PostProcessing from './core/postprocessing';
 import Storage from './core/storage';
+import Walk from './core/walk';
 import Color from './ui/color';
 import Exporter from './ui/exporter';
 import Orientation, { OrientationMode } from './ui/orientation';
@@ -25,6 +27,10 @@ import Snapshot from './ui/snapshot';
 
 PatchShaders();
 
+const ui = document.getElementById('ui');
+if (!ui) {
+  throw new Error("Couldn't get ui");
+}
 const viewport = document.getElementById('viewport');
 if (!viewport) {
   throw new Error("Couldn't get viewport");
@@ -84,22 +90,28 @@ chunks.forEach(({ x, y, z }) => (
   world.updateChunk(x, y, z)
 ));
 
-camera.position.set(0, 16, 32);
 const controls = new OrbitControls(camera, viewport);
-controls.target.set(0, 8, 0);
 controls.addEventListener('change', () => {
   needsUpdate = true;
 });
-controls.minDistance = 4;
-controls.maxDistance = 96;
-controls.mouseButtons.MIDDLE = undefined;
 controls.enableDamping = true;
 controls.enablePan = controls.enableRotate = false;
+controls.dampingFactor = 0.1;
+controls.maxDistance = 96;
+controls.minDistance = 4;
+controls.mouseButtons.MIDDLE = undefined;
 document.addEventListener('keyup', ({ key }) => {
+  if (walk.isEnabled()) {
+    return;
+  }
   if (key === ' ') {
     controls.enablePan = controls.enableRotate = false;
   }
 });
+
+controls.target.set(0, 8, 0);
+camera.position.set(0, 16, 32);
+const walk = new Walk(camera, controls, world);
 
 const color = new Color();
 const size = new Size();
@@ -108,8 +120,8 @@ const orientation = new Orientation();
 materials.voxels.visible = false;
 document.addEventListener('keydown', (e) => {
   const { ctrlKey, key, repeat, shiftKey } = e;
-  if (!repeat && key === ' ') {
-    controls.enablePan = controls.enableRotate = true;
+  if (!repeat && key.toLocaleLowerCase() === 'escape') {
+    ui.style.display = walk.toggle() ? 'none' : '';
   }
   if (key.toLocaleLowerCase() === 'backspace' && ctrlKey) {
     e.preventDefault();
@@ -121,6 +133,12 @@ document.addEventListener('keydown', (e) => {
     materials.triangles.visible = !materials.triangles.visible;
     materials.voxels.visible = !materials.triangles.visible;
     needsUpdate = true;
+  }
+  if (walk.isEnabled()) {
+    return;
+  }
+  if (!repeat && key === ' ') {
+    controls.enablePan = controls.enableRotate = true;
   }
   if (ctrlKey && key.toLocaleLowerCase() === 'z') {
     e.preventDefault();
@@ -155,6 +173,7 @@ input.addEventListener('dragstart', ({ pointer, ctrlKey, shiftKey }) => {
     controls.enablePan
     || (ctrlKey && pointer.button !== 1)
     || (shiftKey && pointer.button !== 1)
+    || walk.isEnabled()
   ) {
     return;
   }
@@ -260,8 +279,17 @@ const draw = (position: Vector3) => {
   drawing.lastPosition.copy(position);
 };
 
+const clock = new Clock();
+document.addEventListener('visibilitychange', () => (
+  document.visibilityState === 'visible' && clock.start()
+));
+
 renderer.setAnimationLoop(() => {
+  const delta = Math.min(clock.getDelta(), 1);
   controls.update();
+  for (let i = 0; i < 4; i++) {
+    walk.update(delta / 4);
+  }
   if (needsUpdate) {
     needsUpdate = false;
     postprocessing.render(renderer, camera, scene);
@@ -271,5 +299,4 @@ renderer.setAnimationLoop(() => {
 new Exporter(world);
 new Snapshot(postprocessing, renderer, camera, scene);
 
-const ui = document.getElementById('ui');
 if (ui) ui.style.display = '';

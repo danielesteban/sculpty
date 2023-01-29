@@ -18,6 +18,7 @@ specifiers:
   rollup-plugin-serve: ^2.0.2
   rollup-plugin-web-worker-loader: ^1.6.1
   three: ^0.149.0
+  three-mesh-bvh: ^0.5.22
   tslib: ^2.5.0
   typescript: ^4.9.4
 
@@ -25,6 +26,7 @@ dependencies:
   fastnoise-lite: 0.0.1
   fflate: 0.7.4
   three: 0.149.0
+  three-mesh-bvh: 0.5.22_three@0.149.0
 
 devDependencies:
   '@rollup/plugin-alias': 4.0.3_rollup@2.79.1
@@ -1535,6 +1537,14 @@ packages:
       commander: 2.20.3
       source-map-support: 0.5.21
     dev: true
+
+  /three-mesh-bvh/0.5.22_three@0.149.0:
+    resolution: {integrity: sha512-vi9X78CoEz1VVfkKRpUZQa34SEc0QGDd9Hmyis0aeBRAmjp4BpHQ2URcirBsOvFMNBXqB9Klp8sQ9NCRsUEW0w==}
+    peerDependencies:
+      three: '>= 0.123.0'
+    dependencies:
+      three: 0.149.0
+    dev: false
 
   /three/0.149.0:
     resolution: {integrity: sha512-tohpUxPDht0qExRLDTM8sjRLc5d9STURNrdnK3w9A+V4pxaTBfKWWT/IqtiLfg23Vfc3Z+ImNfvRw1/0CtxrkQ==}
