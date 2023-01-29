@@ -2,18 +2,15 @@ import './main.css';
 import { World } from 'sculpty';
 import {
   Clock,
-  Mesh,
   PMREMGenerator,
   PerspectiveCamera,
-  PlaneGeometry,
-  Raycaster,
   Scene,
-  Vector3,
   WebGLRenderer,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import Input from './core/input';
+import Drawing from './core/drawing';
 import Materials from './core/materials';
 import PatchShaders from './core/patches';
 import PostProcessing from './core/postprocessing';
@@ -21,7 +18,7 @@ import Storage from './core/storage';
 import Walk from './core/walk';
 import Color from './ui/color';
 import Exporter from './ui/exporter';
-import Orientation, { OrientationMode } from './ui/orientation';
+import Orientation from './ui/orientation';
 import Size from './ui/size';
 import Snapshot from './ui/snapshot';
 
@@ -100,14 +97,6 @@ controls.dampingFactor = 0.1;
 controls.maxDistance = 96;
 controls.minDistance = 4;
 controls.mouseButtons.MIDDLE = undefined;
-document.addEventListener('keyup', ({ key }) => {
-  if (walk.isEnabled()) {
-    return;
-  }
-  if (key === ' ') {
-    controls.enablePan = controls.enableRotate = false;
-  }
-});
 
 controls.target.set(0, 8, 0);
 camera.position.set(0, 16, 32);
@@ -116,6 +105,15 @@ const walk = new Walk(camera, controls, world);
 const color = new Color();
 const size = new Size();
 const orientation = new Orientation();
+const drawing = new Drawing(camera, color, orientation, size, world);
+const input = new Input(viewport);
+input.addEventListener('dragstart', (e) => {
+  if (!controls.enablePan && !walk.isEnabled()) {
+    drawing.start(e);
+  }
+});
+input.addEventListener('dragmove', (e) => drawing.move(e));
+input.addEventListener('dragend', () => drawing.end());
 
 materials.voxels.visible = false;
 document.addEventListener('keydown', (e) => {
@@ -155,129 +153,14 @@ document.addEventListener('keydown', (e) => {
     orientation.toggleMode();
   }
 });
-
-const aux = new Vector3();
-const center = new Vector3(0.5, 0.5, 0.5);
-const drawing = {
-  action: 0,
-  isEnabled: false,
-  isEraser: false,
-  isPaint: false,
-  lastPosition: new Vector3(),
-  plane: new Mesh(new PlaneGeometry(10000, 10000, 1, 1)),
-  raycaster: new Raycaster(undefined, undefined, 0, 128),
-};
-const input = new Input(viewport);
-input.addEventListener('dragstart', ({ pointer, ctrlKey, shiftKey }) => {
-  if (
-    controls.enablePan
-    || (ctrlKey && pointer.button !== 1)
-    || (shiftKey && pointer.button !== 1)
-    || walk.isEnabled()
-  ) {
+document.addEventListener('keyup', ({ key }) => {
+  if (walk.isEnabled()) {
     return;
   }
-
-  const { plane, raycaster } = drawing;
-  raycaster.setFromCamera(pointer.position, camera);
-  const hit = raycaster.intersectObject(world, true)[0];
-  if (!hit || !hit.face?.normal) {
-    return;
+  if (key === ' ') {
+    controls.enablePan = controls.enableRotate = false;
   }
-  if (pointer.button === 4) {
-    const hex = (hit.object as any).getColor(hit.instanceId).getHex();
-    color.setValue(
-      (hex >> 16) & 0xFF,
-      (hex >> 8) & 0xFF,
-      hex & 0xFF
-    );
-    return;
-  }
- 
-  drawing.action++;
-  drawing.isEnabled = true;
-  drawing.isEraser = ctrlKey || pointer.button === 2;
-  drawing.isPaint = shiftKey;
-  hit.point
-    .addScaledVector(hit.face.normal, 0.25 * ((drawing.isEraser || drawing.isPaint) ? -1 : 1))
-    .floor();
-  draw(hit.point);
-
-  plane.position.copy(hit.point).add(center);
-  switch (orientation.mode) {
-    default:
-      plane.quaternion.copy(camera.quaternion);
-      break;
-    case OrientationMode.surface:
-      plane.lookAt(aux.addVectors(plane.position, hit.face.normal));
-      break;
-  }
-  plane.updateMatrixWorld();
 });
-input.addEventListener('dragmove', ({ pointer }) => {
-  const { isEnabled, isPaint, lastPosition, plane, raycaster } = drawing;
-  if (!isEnabled) {
-    return;
-  }
-  raycaster.setFromCamera(pointer.position, camera);
-  let hit;
-  if (isPaint) {
-    hit = raycaster.intersectObject(world, true)[0];
-  } else {
-    hit = raycaster.intersectObject(plane)[0];
-  }
-  if (!hit || !hit.face?.normal) {
-    return;
-  }
-  if (isPaint) {
-    hit.point
-      .addScaledVector(hit.face.normal, 0.25 * ((drawing.isEraser || drawing.isPaint) ? -1 : 1));
-  }
-  hit.point.floor();
-  if (
-    lastPosition.equals(hit.point)
-    || (
-      isPaint && lastPosition.distanceTo(hit.point) > 8
-    )
-  ) {
-    return;
-  }
-  draw(hit.point);
-});
-input.addEventListener('dragend', () => {
-  drawing.isEnabled = false;
-});
-
-const draw = (position: Vector3) => {
-  let value;
-  let r, g, b;
-  if (drawing.isEraser) {
-    value = 0;
-  } else {
-    if (!drawing.isPaint) {
-      value = 64 + Math.floor(Math.random() * 192);
-    }
-    r = color.value.r;
-    g = color.value.g;
-    b = color.value.b;
-  }
-  const s = size.value;
-  const { x, y, z } = position;
-  const updates = [];
-  for (let bz = -s; bz <= s; bz++) {
-    for (let by = -s; by <= s; by++) {
-      for (let bx = -s; bx <= s; bx++) {
-        updates.push({
-          x: x + bx, y: y + by, z: z + bz,
-          r, g, b,
-          value,
-        });
-      }
-    }
-  }
-  world.update(updates, drawing.action);
-  drawing.lastPosition.copy(position);
-};
 
 const clock = new Clock();
 document.addEventListener('visibilitychange', () => (
