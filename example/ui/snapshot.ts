@@ -8,14 +8,21 @@ import PostProcessing from '../core/postprocessing';
 import { Snapshot as Icon } from './icons';
 
 class Snapshot {
-  constructor(
-    postprocessing: PostProcessing,
-    renderer: WebGLRenderer,
-    camera: PerspectiveCamera,
-    scene: Scene,
-    width: number = 3840,
-    height: number = 2160
-  ) {
+  constructor({
+    camera,
+    postprocessing,
+    renderer,
+    scene,
+    width = 3840,
+    height = 2160
+  }: {
+    camera: PerspectiveCamera;
+    postprocessing: PostProcessing;
+    renderer: WebGLRenderer;
+    scene: Scene;
+    width?: number;
+    height?: number;
+  }) {
     const container = document.getElementById('actions');
     if (!container) {
       throw new Error('Couldn\'t get UI container');

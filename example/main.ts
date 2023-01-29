@@ -1,20 +1,12 @@
 import './main.css';
 import { World } from 'sculpty';
-import {
-  Clock,
-  PMREMGenerator,
-  PerspectiveCamera,
-  Scene,
-  WebGLRenderer,
-} from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import Input from './core/input';
 import Drawing from './core/drawing';
+import Input from './core/input';
 import Materials from './core/materials';
 import PatchShaders from './core/patches';
-import PostProcessing from './core/postprocessing';
 import Storage from './core/storage';
+import Viewport from './core/viewport';
 import Walk from './core/walk';
 import Color from './ui/color';
 import Exporter from './ui/exporter';
@@ -24,60 +16,35 @@ import Snapshot from './ui/snapshot';
 
 PatchShaders();
 
-const ui = document.getElementById('ui');
-if (!ui) {
-  throw new Error("Couldn't get ui");
-}
-const viewport = document.getElementById('viewport');
-if (!viewport) {
-  throw new Error("Couldn't get viewport");
-}
-viewport.addEventListener('contextmenu', (e) => e.preventDefault());
-viewport.addEventListener('touchstart', (e) => e.preventDefault());
-
-const camera = new PerspectiveCamera(75, 1, 0.1, 1000);
-const renderer = new WebGLRenderer({
-  antialias: false,
-  powerPreference: 'high-performance',
-  stencil: false,
+const viewport = new Viewport((delta) => {
+  controls.update();
+  for (let i = 0; i < 4; i++) {
+    walk.update(delta / 4);
+  }
 });
-renderer.setPixelRatio(window.devicePixelRatio || 1);
-const scene = new Scene();
-scene.environment = (new PMREMGenerator(renderer)).fromScene(new RoomEnvironment(), 0.04).texture;
-const postprocessing = new PostProcessing({ samples: 4 });
-
-let needsUpdate = false;
-
-const resize = () => {
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  postprocessing.setSize(window.innerWidth, window.innerHeight);
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  needsUpdate = true;
-};
-
-resize();
-window.addEventListener('resize', resize);
-viewport.appendChild(renderer.domElement);
 
 const materials = Materials();
 const storage = new Storage({ chunkSize: 32 });
 const world = new World({ history: true, materials, storage });
 world.addEventListener('change', () => {
-  needsUpdate = true;
+  viewport.needsUpdate = true;
 });
-scene.add(world);
+viewport.scene.add(world);
 
+const ui = document.getElementById('ui');
+if (!ui) {
+  throw new Error('Couldn\'t get ui');
+}
 const color = new Color();
 const size = new Size();
 const orientation = new Orientation();
 new Exporter(world);
-new Snapshot(postprocessing, renderer, camera, scene);
+new Snapshot(viewport);
 ui.style.display = '';
 
-const controls = new OrbitControls(camera, viewport);
+const controls = new OrbitControls(viewport.camera, viewport.dom);
 controls.addEventListener('change', () => {
-  needsUpdate = true;
+  viewport.needsUpdate = true;
 });
 controls.enableDamping = true;
 controls.enablePan = controls.enableRotate = false;
@@ -86,11 +53,11 @@ controls.maxDistance = 96;
 controls.minDistance = 4;
 controls.mouseButtons.MIDDLE = undefined;
 controls.target.set(0, 8, 0);
-camera.position.set(0, 16, 32);
-const walk = new Walk(camera, controls, world);
+viewport.camera.position.set(0, 16, 32);
+const walk = new Walk(viewport.camera, controls, world);
 
-const input = new Input(viewport);
-const drawing = new Drawing(camera, color, orientation, size, world);
+const input = new Input(viewport.dom);
+const drawing = new Drawing(viewport.camera, color, orientation, size, world);
 input.addEventListener('dragstart', (e: any) => {
   if (!controls.enablePan && !walk.isEnabled()) {
     drawing.start(e);
@@ -107,7 +74,7 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     materials.triangles.visible = !materials.triangles.visible;
     materials.voxels.visible = !materials.triangles.visible;
-    needsUpdate = true;
+    viewport.needsUpdate = true;
   }
   if (!repeat && ctrlKey && code === 'Backspace') {
     e.preventDefault();
@@ -141,23 +108,6 @@ document.addEventListener('keyup', ({ code }) => {
   }
   if (code === 'Space') {
     controls.enablePan = controls.enableRotate = false;
-  }
-});
-
-const clock = new Clock();
-document.addEventListener('visibilitychange', () => (
-  document.visibilityState === 'visible' && clock.start()
-));
-
-renderer.setAnimationLoop(() => {
-  const delta = Math.min(clock.getDelta(), 1);
-  controls.update();
-  for (let i = 0; i < 4; i++) {
-    walk.update(delta / 4);
-  }
-  if (needsUpdate) {
-    needsUpdate = false;
-    postprocessing.render(renderer, camera, scene);
   }
 });
 
