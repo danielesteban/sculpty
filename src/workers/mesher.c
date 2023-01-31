@@ -53,9 +53,9 @@ static void computeNormal(Vector* normal, Vector** triangle) {
     triangle[0]->y - triangle[1]->y,
     triangle[0]->z - triangle[1]->z
   };
-	normal->x = cb.y * ab.z - cb.z * ab.y;
-	normal->y = cb.z * ab.x - cb.x * ab.z;
-	normal->z = cb.x * ab.y - cb.y * ab.x;
+  normal->x = cb.y * ab.z - cb.z * ab.y;
+  normal->y = cb.z * ab.x - cb.x * ab.z;
+  normal->z = cb.x * ab.y - cb.y * ab.x;
   const float length = sqrt(normal->x * normal->x + normal->y * normal->y + normal->z * normal->z);
   if (length != 0.0) {
     normal->x /= length;
@@ -143,7 +143,7 @@ static void growBox(
 
 static const float SRGBToLinear(const unsigned char c) {
   const float n = (float) c / 255.0f;
-	return (n < 0.04045f) ? n * 0.0773993808f : pow(n * 0.9478672986f + 0.0521327014f, 2.4f);
+  return (n < 0.04045f) ? n * 0.0773993808f : pow(n * 0.9478672986f + 0.0521327014f, 2.4f);
 }
 
 static void interpolate(

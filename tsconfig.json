@@ -4,7 +4,7 @@
     "declarationDir": "types",
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
-    "moduleResolution": "nodenext",
+    "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noImplicitOverride": true,
