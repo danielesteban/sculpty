@@ -2,7 +2,6 @@ import './main.css';
 import { World } from 'sculpty';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Drawing from './core/drawing';
-import Input from './core/input';
 import Materials from './core/materials';
 import PatchShaders from './core/patches';
 import Storage from './core/storage';
@@ -56,15 +55,18 @@ controls.target.set(0, 8, 0);
 viewport.camera.position.set(0, 16, 32);
 const walk = new Walk(viewport.camera, controls, world);
 
-const input = new Input(viewport.dom);
 const drawing = new Drawing(viewport.camera, color, orientation, size, world);
-input.addEventListener('dragstart', (e: any) => {
+viewport.addEventListener('dragstart', ({ pointer, ctrlKey, shiftKey }: any) => {
   if (!controls.enablePan && !walk.isEnabled()) {
-    drawing.start(e);
+    drawing.start(pointer, ctrlKey, shiftKey);
   }
 });
-input.addEventListener('dragmove', (e: any) => drawing.move(e));
-input.addEventListener('dragend', () => drawing.end());
+viewport.addEventListener('dragmove', ({ pointer }: any) => (
+  drawing.move(pointer)
+));
+viewport.addEventListener('dragend', () => (
+  drawing.end()
+));
 document.addEventListener('keydown', (e) => {
   const { ctrlKey, code, repeat, shiftKey } = e;
   if (!repeat && code === 'Escape') {

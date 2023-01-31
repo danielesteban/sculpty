@@ -6,7 +6,7 @@ import {
   Raycaster,
   Vector3
 } from 'three';
-import { Pointer } from './input';
+import { Pointer } from './viewport';
 import Color from '../ui/color';
 import Orientation, { OrientationMode } from '../ui/orientation';
 import Size from '../ui/size';
@@ -42,7 +42,7 @@ class Drawing {
     this.world = world;
   }
 
-  start({ pointer, ctrlKey, shiftKey }: { pointer: Pointer; ctrlKey: boolean; shiftKey: boolean; }) {
+  start(pointer: Pointer, ctrlKey: boolean, shiftKey: boolean) {
     if (
       (ctrlKey && pointer.button !== 1)
       || (shiftKey && pointer.button !== 1)
@@ -87,7 +87,7 @@ class Drawing {
     plane.updateMatrixWorld();
   }
 
-  move({ pointer }: { pointer: Pointer; }) {
+  move(pointer: Pointer) {
     const { camera, isEnabled, isEraser, isPaint, lastPosition, plane, raycaster, world } = this;
     if (!isEnabled) {
       return;
