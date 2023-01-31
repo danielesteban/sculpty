@@ -18,7 +18,7 @@ export default {
   },
   plugins: [
     nodeResolve({ extensions: ['.js', '.ts'] }),
-    typescript(),
+    typescript({ declaration: true, declarationDir: 'types' }),
     wasm({ maxFileSize: Infinity }),
     webWorkerLoader(),
     terser({ format: { comments: false } }),

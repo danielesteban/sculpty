@@ -5,9 +5,6 @@
     "paths": {
       "sculpty": ["../dist"],
     },
-    "declaration": false,
-    "declarationDir": null,
-    "sourceMap": true
   },
   "include": ["."]
 }
